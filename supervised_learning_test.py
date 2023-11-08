@@ -94,7 +94,7 @@ def test_decisiontree_predict_1(small_2class_test_data):
     assert dt_classifier._root.right.y_value == 2
 
     
-def test_decisiontree_predict_1(gaussian_cluster_test_data_4class):
+def test_decisiontree_predict_2(gaussian_cluster_test_data_4class):
     """ Fit decision tree to Gaussian blob data and predict classes for blob center points """
     dt_classifier = sl.DecisionTree()
     X,y,X_centers = gaussian_cluster_test_data_4class
