@@ -84,7 +84,7 @@ def test_best_split_feature_value(small_2class_test_data,gaussian_cluster_test_d
     assert sl.best_split_feature_value(X,y) == pytest.approx(((0.34090909, 0, -0.36831487)))
 
 
-def test_decisiontree_predict(small_2class_test_data):
+def test_decisiontree_predict_1(small_2class_test_data):
     X,y = small_2class_test_data
     dt_classifier = sl.DecisionTree()
     dt_classifier.train(X,y)
@@ -94,7 +94,7 @@ def test_decisiontree_predict(small_2class_test_data):
     assert dt_classifier._root.right.y_value == 2
 
     
-def test_decisiontree_predict(gaussian_cluster_test_data_4class):
+def test_decisiontree_predict_1(gaussian_cluster_test_data_4class):
     """ Fit decision tree to Gaussian blob data and predict classes for blob center points """
     dt_classifier = sl.DecisionTree()
     X,y,X_centers = gaussian_cluster_test_data_4class
