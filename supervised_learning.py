@@ -194,8 +194,8 @@ def gini_impurity_reduction(y,left_mask):
     # Returns:
     impurity_reduction: Reduction in mean Gini impurity, scalar in range [0,0.5] 
                         Reduction is measured as _difference_ between Gini impurity for 
-                        the original (not split) dataset, and the mean impurity for the 
-                        two split datasets ("left" and "right").
+                        the original (not split) dataset, and the _weighted_ mean impurity 
+                        for the two split datasets ("left" and "right").
 
     """
     pass
