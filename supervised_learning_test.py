@@ -72,8 +72,9 @@ def test_gini_impurity_reduction():
         y=np.array([1,2,1,2]),left_mask=np.array([1,1,0,0],dtype=bool)) == 0
     assert sl.gini_impurity_reduction(
         y=np.array([1,1,2,1,2,2]), left_mask=np.array([1,1,1,0,0,0],dtype=bool)) == pytest.approx(0.055555,rel=1e-4)
+    # Imbalanced classes, test weighted mean:
     assert sl.gini_impurity_reduction(
-        y=np.array([2,2,1,1,1,2]),left_mask=np.array([1,1,0,0,1,0],dtype=bool)) == pytest.approx(0.055555,rel=1e-4)
+        y=np.array([2,2,1,1,1,2,1]),left_mask=np.array([1,1,0,0,1,0,0],dtype=bool)) == pytest.approx(0.085034, rel=1e-4) 
 
 
 def test_best_split_feature_value(small_2class_test_data,gaussian_cluster_test_data_4class):
