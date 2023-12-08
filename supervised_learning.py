@@ -55,7 +55,7 @@ def convert_y_to_binary(y,y_value_true):
     y_binary:   Binary vector, shape (n_samples,)
                 1 for values in y that are equal to y_value_true, 0 otherwise
     """
-    return y == y_value_true
+    return (y == y_value_true).astype(int)
 
 
 def train_test_split(X,y,train_frac):
