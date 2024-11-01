@@ -1,4 +1,5 @@
 <!-- # Karaktersatt oppgave 2 | DTE-2602  -->
+# DTE-2602 Karaktersatt oppgave 2: Veiledet læring
 
 ## Introduksjon
 Hensikten med denne karaktersatte oppgaven er at dere skal implementere og bruke
