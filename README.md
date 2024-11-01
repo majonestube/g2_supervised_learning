@@ -132,7 +132,7 @@ med egen kode) og
 
 
 
-## Vurdering av oppgaven
+## Levering og vurdering av oppgaven
 Besvarelsen på oppgaven består av to deler som skal leveres på Canvas.
 - Python-fil `supervised_learning.py` med implementasjon. Implementasjonen kan bruke biblioteker
   som er inkludert i Python 3.10, samt ``binarytree``, ``numpy``, ``matplotlib`` og
