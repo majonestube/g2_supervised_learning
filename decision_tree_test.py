@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 import sklearn.datasets
-import supervised_learning_solution as sl
+import supervised_learning as sl
 
 
 # ----------
