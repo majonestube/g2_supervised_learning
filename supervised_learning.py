@@ -262,7 +262,7 @@ class DecisionTree:
         else:
             return "<Empty decision tree>"
 
-    def train(self, X: NDArray, y: NDArray):
+    def fit(self, X: NDArray, y: NDArray):
         """Train decision tree based on labelled dataset
 
         Parameters
