@@ -23,7 +23,7 @@ from numpy.typing import NDArray
 #########################################
 
 
-def read_data() -> tuple[NDArray, NDArray]:
+def read_data(file_path) -> tuple[NDArray, NDArray]:
     """Read data from CSV file, remove rows with missing data, and normalize
 
     Returns
@@ -43,7 +43,26 @@ def read_data() -> tuple[NDArray, NDArray]:
     -----
     Z-score normalization: https://en.wikipedia.org/wiki/Standard_score .
     """
-    pass
+    with open(file_path, "r", newline="") as file:
+        csvreader = csv.reader(file)
+        data = [row for row in csvreader]
+    header = data[0]
+    data = np.array(data[1:])
+
+    is_col = np.isin(header, ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+    data_filt = data[:, is_col]
+    is_na = np.any(data_filt == "NA", axis=1)  # True if any element in row is NA
+    data_filt = data_filt[~is_na, :]
+
+    X = data_filt[:, 1:].astype(float)
+
+    y_text = data_filt[:, 0]  #
+    y_unique = list(np.unique(y_text))
+    y = np.array([y_unique.index(species) for species in y_text]) # Convert text to numbers
+
+    X_norm = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+
+    return X_norm, y
 
 
 def convert_y_to_binary(y: NDArray, y_value_true: int) -> NDArray:
@@ -63,7 +82,11 @@ def convert_y_to_binary(y: NDArray, y_value_true: int) -> NDArray:
         Binary vector, shape (n_samples,)
         1 for values in y that are equal to y_value_true, 0 otherwise
     """
-    pass
+
+    y_temp = np.where(y == y_value_true, 1, 0)
+    y_binary = y_temp.astype(int)
+    
+    return y_binary
 
 
 def train_test_split(
@@ -133,7 +156,7 @@ def gini_impurity(y: NDArray) -> float:
     # Notes:
     - Wikipedia ref.: https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity
     """
-    pass
+    print(np.unique(y))
 
 
 def gini_impurity_reduction(y: NDArray, left_mask: NDArray) -> float:
@@ -376,7 +399,9 @@ class DecisionTree:
 ############
 
 if __name__ == "__main__":
-    pass
     # Demonstrate your code / solutions here.
     # Be tidy; don't cut-and-paste lots of lines.
     # Experiments can be implemented as separate functions that are called here.
+
+    X, y = read_data('palmer_penguins.csv')
+
