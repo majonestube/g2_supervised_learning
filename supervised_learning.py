@@ -226,8 +226,18 @@ def best_split_feature_value(X: NDArray, y: NDArray) -> tuple[float, int, float]
     The method checks every possible combination of feature and
     existing unique feature values in the dataset.
     """
-    pass
-
+    feature_index = None
+    feature_value = None
+    impurity_reduction = -(float('inf'))
+    for j in range(X.shape[1]):
+        for value in np.unique(X[:, j]):
+            left_mask = (X[:,j] <= value)
+            gi_reduction = gini_impurity_reduction(y, left_mask)
+            if gi_reduction > impurity_reduction:
+                impurity_reduction = gi_reduction
+                feature_index = j
+                feature_value = value
+    return impurity_reduction, feature_index, feature_value
 
 ###################
 #   Perceptron
