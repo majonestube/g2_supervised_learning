@@ -187,8 +187,16 @@ def gini_impurity_reduction(y: NDArray, left_mask: NDArray) -> float:
         for the two split datasets ("left" and "right").
 
     """
-    pass
+    original_impurity = gini_impurity(y)
+    y_left = y[left_mask]
+    y_right = y[~left_mask]
+    gi_left = gini_impurity(y_left)
+    gi_right = gini_impurity(y_right)
+    n_left = y_left.shape[0]
+    n_right = y_right.shape[0]
+    n = y.shape[0]
 
+    return (original_impurity - ((n_left * gi_left) + (n_right * gi_right))/n)
 
 def best_split_feature_value(X: NDArray, y: NDArray) -> tuple[float, int, float]:
     """Find feature and value "split" that yields highest impurity reduction
@@ -413,4 +421,4 @@ if __name__ == "__main__":
     # Experiments can be implemented as separate functions that are called here.
 
     X, y = read_data('palmer_penguins.csv')
-    print(gini_impurity(y))
+    
