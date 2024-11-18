@@ -149,7 +149,16 @@ def accuracy(y_pred: NDArray, y_true: NDArray) -> float:
     # Notes:
     See https://en.wikipedia.org/wiki/Accuracy_and_precision#In_classification
     """
-    pass
+    checked = []
+    n = y_pred.shape[0]
+    for index in range(n):
+        if y_pred[index] == y_true[index]:
+            checked.append(1)
+        else:
+            checked.append(0)
+    accuracy = checked.count(1)/n
+
+    return accuracy
 
 
 ##############################
@@ -448,4 +457,3 @@ if __name__ == "__main__":
     # Experiments can be implemented as separate functions that are called here.
 
     X, y = read_data('palmer_penguins.csv')
-    
