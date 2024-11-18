@@ -43,24 +43,26 @@ def read_data(file_path) -> tuple[NDArray, NDArray]:
     -----
     Z-score normalization: https://en.wikipedia.org/wiki/Standard_score .
     """
+    
+    # Read the file
     with open(file_path, "r", newline="") as file:
         csvreader = csv.reader(file)
         data = [row for row in csvreader]
     header = data[0]
     data = np.array(data[1:])
 
+    # Remove not wanted data
     is_col = np.isin(header, ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
     data_filt = data[:, is_col]
     is_na = np.any(data_filt == "NA", axis=1)  # True if any element in row is NA
     data_filt = data_filt[~is_na, :]
-
     X = data_filt[:, 1:].astype(float)
+    X_norm = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
+    # Make the vector for species
     y_text = data_filt[:, 0]  #
     y_unique = list(np.unique(y_text))
     y = np.array([y_unique.index(species) for species in y_text]) # Convert text to numbers
-
-    X_norm = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
     return X_norm, y
 
@@ -82,10 +84,9 @@ def convert_y_to_binary(y: NDArray, y_value_true: int) -> NDArray:
         Binary vector, shape (n_samples,)
         1 for values in y that are equal to y_value_true, 0 otherwise
     """
+    # 1 if True, 0 if False
+    y_binary = np.where(y == y_value_true, 1, 0)
 
-    y_temp = np.where(y == y_value_true, 1, 0)
-    y_binary = y_temp.astype(int)
-    
     return y_binary
 
 
@@ -110,8 +111,24 @@ def train_test_split(
     (X_test,y_test): tuple[NDArray, NDArray]]
         Test dataset
     """
-    pass
+    # Find indices to be included in the test dataset
+    size = X.shape[0]
+    n = int(size * train_frac)
+    test_indices = [False for x in range(0, size)]
+    added = 0
+    while added < n:
+        index = rnd.randint(0, size-1)
+        if not test_indices[index]:
+            test_indices[index] = True
+        added += 1
+    test_indices = np.array(test_indices)
 
+    X_train = X[test_indices, :]
+    y_train = y[test_indices]
+    X_test = X[~test_indices, :]
+    y_test = y[~test_indices]
+    
+    return tuple((X_train, y_train)), tuple((X_test, y_test))
 
 def accuracy(y_pred: NDArray, y_true: NDArray) -> float:
     """Calculate accuracy of model based on predicted and true values
