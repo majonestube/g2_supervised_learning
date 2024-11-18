@@ -156,7 +156,16 @@ def gini_impurity(y: NDArray) -> float:
     # Notes:
     - Wikipedia ref.: https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity
     """
-    print(np.unique(y))
+
+    n = y.shape[0]
+    impurity = 1
+    for x in np.unique(y):
+        y_binary = convert_y_to_binary(y, x)
+        n_x = np.count_nonzero(y_binary == 1)
+        impurity -= (n_x/n)**2
+    return impurity
+
+
 
 
 def gini_impurity_reduction(y: NDArray, left_mask: NDArray) -> float:
@@ -404,4 +413,4 @@ if __name__ == "__main__":
     # Experiments can be implemented as separate functions that are called here.
 
     X, y = read_data('palmer_penguins.csv')
-
+    print(gini_impurity(y))
