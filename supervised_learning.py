@@ -311,6 +311,7 @@ class Perceptron:
         i = 0
         for index in range(m):
             i += x[index] * self.weights[index]
+        i = i + self.bias
         
         if i < 0: 
             prediction = 0
@@ -384,11 +385,26 @@ class Perceptron:
         return new_accuracy
 
         
-    def decision_boundary_slope_intercept(self) -> tuple[float, float]:
+    def decision_boundary_slope_intercept(self, weight_indexes: tuple[float, float]) -> tuple[float, float]:
         """Calculate slope and intercept for decision boundary line (2-feature data only)
-        <Write rest of docstring here>
+        
+        Parameters 
+        -----------
+
+
+        Returns
+        --------
+        slope: float
+            The rate of incline or decline, calculated based on weights 
+
+        intercept: float
+            The vertical value where the boundary meets 0 on the horizontal axis 
+
         """
-        pass
+        slope = (-self.weights[weight_indexes[0]]/self.weights[weight_indexes[1]])
+        intercept = (-self.bias/self.weights[weight_indexes[1]])
+
+        return tuple((slope, intercept))
 
 
 ####################
@@ -525,14 +541,19 @@ class DecisionTree:
         if node is None:
             raise ValueError('Node is None')
         elif isinstance(node, DecisionTreeLeafNode):
-            y = np.array([node.y_value])
-            return y
+            return np.full(X.shape[0], node.y_value)
         else:
-            y_left = self._predict(X, node.left)
-            y_right = self._predict(X, node.right)
-            y = np.concatenate([y_left, y_right])
-        y.sort()
-        return y
+            left_mask = X[:, node.feature_index] <= node.feature_value
+            right_mask = ~left_mask
+
+            y_left = self._predict(X[left_mask], node.left)
+            y_right = self._predict(X[right_mask], node.right)
+            
+            y = np.empty(X.shape[0], dtype= y_left.dtype)
+            y[left_mask] = y_left
+            y[right_mask] = y_right
+            
+            return y
 
 
 ############
@@ -543,7 +564,100 @@ if __name__ == "__main__":
     # Demonstrate your code / solutions here.
     # Be tidy; don't cut-and-paste lots of lines.
     # Experiments can be implemented as separate functions that are called here.
+    def visualize_decision_boundary(X: NDArray, y: NDArray, perceptron: Perceptron):
+        """
+        Plot each element used in a perceptron 
 
-    X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
-    perceptron = Perceptron([1, 1, 1, 1], 0.3)
-    print(perceptron.train(X, y, 0.01, 5))
+        Parameters
+        ----------
+        X: NDArray
+            NumPy array of shape (n_elements, m_features)
+            Each element is plotted with coordinates [n][m]
+
+        y: NDArray
+            NumPy array providing the color for the scatter plot
+            The color corresponds to the species 
+
+        """
+        colors = ['blue', 'orange', 'pink', 'yellow']
+        plt.figure(figsize=(5,3.5))
+        for label_value in np.unique(y):
+            plt.scatter(x=X[y==label_value,0],
+                        y=X[y==label_value,1],
+                        c=colors[label_value],
+                        label=f'Class {label_value}')    
+        plt.xlabel('Feature 0')
+        plt.ylabel('Feature 1')
+        plt.legend()
+        
+        slope, intercept = perceptron.decision_boundary_slope_intercept(weight_indexes=(0,1))
+        
+        x_min = min(X[:, 0])
+        x_max = max(X[:, 0])
+        x_range = np.linspace(x_min, x_max,100)
+        graph = slope*x_range + intercept
+        plt.plot(x_range, graph, '-r')
+
+        plt.show()
+
+        return 
+
+    def perceptron_1():
+        X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+        data_set_train, data_set_test = train_test_split(X, y, 0.7)
+        X_train = data_set_train[0][:, :2]
+        y_train = convert_y_to_binary(data_set_train[1], 2)
+        X_test = data_set_test[0][:, :2]
+        y_test = convert_y_to_binary(data_set_test[1], 2)
+
+        perceptron = Perceptron([rnd.random(), rnd.random()], -1)
+        y_pred = perceptron.predict(X_test)
+        first_model_accuracy = accuracy(y_pred, y_test)
+        perceptron.train(X_train, y_train, 0.01, 100)
+
+        y_pred = perceptron.predict(X_test)
+        model_accuracy = accuracy(y_pred, y_test)
+
+        visualize_decision_boundary(X_train, y_train, perceptron)
+
+        return first_model_accuracy, model_accuracy
+
+
+    def perceptron_2():
+        X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+        data_set_train, data_set_test = train_test_split(X, y, 0.7)
+        X_train = data_set_train[0][:, 2:]
+        y_train = convert_y_to_binary(data_set_train[1], 1)
+        X_test = data_set_test[0][:, 2:]
+        y_test = convert_y_to_binary(data_set_test[1], 1)
+
+        perceptron = Perceptron([rnd.random(), rnd.random()], -1)
+        y_pred = perceptron.predict(X_test)
+        first_model_accuracy = accuracy(y_pred, y_test)
+        perceptron.train(X_train, y_train, 0.01, 100)
+
+        y_pred = perceptron.predict(X_test)
+        model_accuracy = accuracy(y_pred, y_test)
+
+        visualize_decision_boundary(X_train, y_train, perceptron)
+
+        return first_model_accuracy, model_accuracy
+
+    def decision_tree_1():
+        X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+        data_set_train, data_set_test = train_test_split(X, y, 0.7)
+        X_train = data_set_train[0][:, :2]
+        y_train = data_set_train[1]
+        X_test = data_set_test[0][:, :2]
+        y_test = data_set_test[1]
+
+        tree = DecisionTree()
+        tree.fit(X_train, y_train)
+
+        y_pred = tree.predict(X_test)
+        new_accuracy = accuracy(y_pred, y_test)
+        print(y_pred, new_accuracy)
+        
+        return tree
+    
+    print(decision_tree_1())
