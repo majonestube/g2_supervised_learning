@@ -9,6 +9,7 @@ from decision_tree_nodes import DecisionTreeBranchNode, DecisionTreeLeafNode
 from matplotlib import lines
 from numpy.typing import NDArray
 
+
 # The code below is "starter code" for graded assignment 2 in DTE-2602
 # You should implement every method / function which only contains "pass".
 # "Helper functions" can be left unedited.
@@ -23,8 +24,14 @@ from numpy.typing import NDArray
 #########################################
 
 
-def read_data(file_path) -> tuple[NDArray, NDArray]:
+def read_data(file_path: str, features: list) -> tuple[NDArray, NDArray]:
     """Read data from CSV file, remove rows with missing data, and normalize
+    Parameters
+    ----------
+    file_path: str
+        File to be read by function
+    
+    
 
     Returns
     -------
@@ -52,7 +59,7 @@ def read_data(file_path) -> tuple[NDArray, NDArray]:
     data = np.array(data[1:])
 
     # Remove not wanted data
-    is_col = np.isin(header, ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+    is_col = np.isin(header, features)
     data_filt = data[:, is_col]
     is_na = np.any(data_filt == "NA", axis=1)  # True if any element in row is NA
     data_filt = data_filt[~is_na, :]
@@ -191,9 +198,6 @@ def gini_impurity(y: NDArray) -> float:
         impurity -= (n_x/n)**2
     return impurity
 
-
-
-
 def gini_impurity_reduction(y: NDArray, left_mask: NDArray) -> float:
     """Calculate the reduction in mean impurity from a binary split
 
@@ -284,28 +288,102 @@ class Perceptron:
         Set to None if Perceptron has not yet been trained.
     """
 
-    def __init__(self):
+    def __init__(self, weights, bias):
         """Initialize perceptron"""
-        pass
+        self.weights = weights
+        self.bias = bias
+        self.converged = None
 
     def predict_single(self, x: NDArray) -> int:
         """Predict / calculate perceptron output for single observation / row x
-        <Write rest of docstring here>
+        
+        Parameters
+        -----------
+        x: NDArray 
+            One row with m features, from matrix X with shape n_samples, m_features
+
+        Returns 
+        --------
+        prediction: int
+            Integer value corresponding to one of the three species of penguin. 
         """
-        pass
+        m = x.shape[0]
+        i = 0
+        for index in range(m):
+            i += x[index] * self.weights[index]
+        
+        if i < 0: 
+            prediction = 0
+        elif i < 3:
+            prediction = 1
+        else:
+            prediction = 2
+        
+        return prediction
+
 
     def predict(self, X: NDArray) -> NDArray:
         """Predict / calculate perceptron output for data matrix X
-        <Write rest of docstring here>
+        
+        Parameters
+        -----------
+        X: NDArray 
+            NumPy array with shape (n_samples, m_features)
+
+        Returns
+        --------
+        y_pred: NDArray
+            NumPy array with shape (n_samples, ) with predicted species 
         """
-        pass
+        n = X.shape[0]
+        predictions = []
+        for row in range(n):
+            y = self.predict_single(X[row])
+            predictions.append(y)
+        
+        y_pred = np.array(predictions)
+
+        return y_pred
+
 
     def train(self, X: NDArray, y: NDArray, learning_rate: float, max_epochs: int):
         """Fit perceptron to training data X with binary labels y
-        <Write rest of docstring here>
-        """
-        pass
+        Parameters
+        -----------
+        X: NDArray
+            NumPy array with shape (n_samples, m_features)
 
+        y: NDArray
+            NumPy array with shape (n_samples,) which includes the correct species
+
+        learning_rate: float
+            Float in range (0, 1) determining how much to override previous weight 
+
+        max_epochs: int 
+            The maximum number of episodes to iterate through, to prevent a neverending loop
+
+        Returns
+        -------
+        accuracy: float 
+            Float in range (0, 1) representing how accurately the perceptron has been trained in the dataset 
+        """
+        epoch = 0
+        self.converged = False
+        n = X.shape[0]
+        m = X.shape[1]
+        old_accuracy = 0
+        while (epoch < max_epochs) and not self.converged:
+            y_pred = self.predict(X)
+            for index in range(n):
+                for w_index in range(m):
+                    self.weights[w_index] = self.weights[w_index] + (learning_rate * (y[index] - y_pred[index]) * X[index][w_index])
+            new_accuracy = accuracy(y_pred, y)
+            if abs(new_accuracy - old_accuracy) < 1e-5:
+                self.converged = True
+            epoch += 1
+        return new_accuracy
+
+        
     def decision_boundary_slope_intercept(self) -> tuple[float, float]:
         """Calculate slope and intercept for decision boundary line (2-feature data only)
         <Write rest of docstring here>
@@ -444,7 +522,17 @@ class DecisionTree:
                 "stitch" predictions for left and right datasets into single y vector
                 return y vector (length matching number of rows in X)
         """
-        pass
+        if node is None:
+            raise ValueError('Node is None')
+        elif isinstance(node, DecisionTreeLeafNode):
+            y = np.array([node.y_value])
+            return y
+        else:
+            y_left = self._predict(X, node.left)
+            y_right = self._predict(X, node.right)
+            y = np.concatenate([y_left, y_right])
+        y.sort()
+        return y
 
 
 ############
@@ -456,4 +544,6 @@ if __name__ == "__main__":
     # Be tidy; don't cut-and-paste lots of lines.
     # Experiments can be implemented as separate functions that are called here.
 
-    X, y = read_data('palmer_penguins.csv')
+    X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+    perceptron = Perceptron([1, 1, 1, 1], 0.3)
+    print(perceptron.train(X, y, 0.01, 5))
