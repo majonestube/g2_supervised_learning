@@ -643,13 +643,48 @@ if __name__ == "__main__":
 
         return first_model_accuracy, model_accuracy
 
+    
     def decision_tree_1():
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, 1:3]
-        y_train = data_set_train[1]
+        y_train = convert_y_to_binary(data_set_train[1], 2)
+        X_test = data_set_test[0][:, 1:3]
+        y_test = convert_y_to_binary(data_set_test[1], 2)
+
+        tree = DecisionTree()
+        tree.fit(X_train, y_train)
+
+        y_pred = tree.predict(X_test)
+        new_accuracy = accuracy(y_pred, y_test)
+        print(new_accuracy)
+
+        return tree
+    
+    def decision_tree_1_2():
+        X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+        data_set_train, data_set_test = train_test_split(X, y, 0.7)
+        X_train = data_set_train[0][:, 1:3]
+        y_train =data_set_train[1]
         X_test = data_set_test[0][:, 1:3]
         y_test = data_set_test[1]
+
+        tree = DecisionTree()
+        tree.fit(X_train, y_train)
+
+        y_pred = tree.predict(X_test)
+        new_accuracy = accuracy(y_pred, y_test)
+        print(new_accuracy)
+
+        return tree
+    
+    def decision_tree_2():
+        X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
+        data_set_train, data_set_test = train_test_split(X, y, 0.7)
+        X_train = data_set_train[0][:, :2]
+        y_train = convert_y_to_binary(data_set_train[1], 1)
+        X_test = data_set_test[0][:, :2]
+        y_test = convert_y_to_binary(data_set_test[1], 1)
 
         tree = DecisionTree()
         tree.fit(X_train, y_train)
@@ -660,7 +695,7 @@ if __name__ == "__main__":
         
         return tree
     
-    def decision_tree_2():
+    def decision_tree_2_2():
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, :2]
@@ -676,7 +711,7 @@ if __name__ == "__main__":
         print(new_accuracy)
         
         return tree
-    
+
     def decision_tree_3():
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
@@ -693,4 +728,4 @@ if __name__ == "__main__":
         print(new_accuracy)
         
         return tree
-
+print(decision_tree_2_2())
