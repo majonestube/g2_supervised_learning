@@ -315,10 +315,8 @@ class Perceptron:
         
         if i < 0: 
             prediction = 0
-        elif i < 3:
+        else: 
             prediction = 1
-        else:
-            prediction = 2
         
         return prediction
 
@@ -402,7 +400,7 @@ class Perceptron:
             The vertical value where the boundary meets 0 on the horizontal axis 
 
         """
-        slope = (-self.weights[weight_indexes[0]]/self.weights[weight_indexes[1]])
+        slope =  -(self.weights[weight_indexes[0]]/self.weights[weight_indexes[1]])
         intercept = -(self.bias/self.weights[weight_indexes[1]])
 
         return tuple((slope, intercept))
@@ -642,6 +640,7 @@ if __name__ == "__main__":
 
         visualize_decision_boundary(X_train, y_train, perceptron)
 
+
         return first_model_accuracy, model_accuracy
 
     def decision_tree_1():
@@ -680,7 +679,7 @@ if __name__ == "__main__":
     
     def decision_tree_3():
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
-        data_set_train, data_set_test = train_test_split(X, y, 0.9)
+        data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0]
         y_train = data_set_train[1]
         X_test = data_set_test[0]
@@ -695,4 +694,3 @@ if __name__ == "__main__":
         
         return tree
 
-print(perceptron_2())
