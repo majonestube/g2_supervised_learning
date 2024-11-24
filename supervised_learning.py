@@ -118,22 +118,25 @@ def train_test_split(
     (X_test,y_test): tuple[NDArray, NDArray]]
         Test dataset
     """
-    # Find indices to be included in the test dataset
+    # Initialise list of indices included in train-dataset, where value is "False" for each index 
     size = X.shape[0]
     n = int(size * train_frac)
-    test_indices = [False for x in range(0, size)]
+    train_indices = [False for x in range(0, size)]
     added = 0
+
+    # Add random indices to train-dataset until there are n indices in the list
     while added < n:
         index = rnd.randint(0, size-1)
-        if not test_indices[index]:
-            test_indices[index] = True
+        if not train_indices[index]:
+            train_indices[index] = True
         added += 1
-    test_indices = np.array(test_indices)
+    train_indices = np.array(train_indices)
 
-    X_train = X[test_indices, :]
-    y_train = y[test_indices]
-    X_test = X[~test_indices, :]
-    y_test = y[~test_indices]
+    # Create matrix for dataset with correponding predicted values, both for training and testing
+    X_train = X[train_indices, :]
+    y_train = y[train_indices]
+    X_test = X[~train_indices, :]
+    y_test = y[~train_indices]
     
     return tuple((X_train, y_train)), tuple((X_test, y_test))
 
@@ -156,13 +159,18 @@ def accuracy(y_pred: NDArray, y_true: NDArray) -> float:
     # Notes:
     See https://en.wikipedia.org/wiki/Accuracy_and_precision#In_classification
     """
+    # Create list of the checked values
     checked = []
     n = y_pred.shape[0]
+
+    # Check each value in y_pred, appending 1 to the list if the value is correct, and 0 if not correct
     for index in range(n):
         if y_pred[index] == y_true[index]:
             checked.append(1)
         else:
             checked.append(0)
+
+    # Calculate the accuracy
     accuracy = checked.count(1)/n
 
     return accuracy
@@ -189,13 +197,16 @@ def gini_impurity(y: NDArray) -> float:
     # Notes:
     - Wikipedia ref.: https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity
     """
-
+    # Define n, and set 1 as the inital value for the gini impurity
     n = y.shape[0]
     impurity = 1
+
+    # Remove the squared probabilities of each class in the group
     for x in np.unique(y):
         y_binary = convert_y_to_binary(y, x)
         n_x = np.count_nonzero(y_binary == 1)
         impurity -= (n_x/n)**2
+
     return impurity
 
 def gini_impurity_reduction(y: NDArray, left_mask: NDArray) -> float:
@@ -217,11 +228,16 @@ def gini_impurity_reduction(y: NDArray, left_mask: NDArray) -> float:
         for the two split datasets ("left" and "right").
 
     """
+    # Define the original impurity, and the sections to calculate the impurities of
     original_impurity = gini_impurity(y)
     y_left = y[left_mask]
     y_right = y[~left_mask]
+
+    # Caluculate the impurities of each section
     gi_left = gini_impurity(y_left)
     gi_right = gini_impurity(y_right)
+
+    # Find the number of elements in each section, and use this to find the "weighted" reduction in impurity
     n_left = y_left.shape[0]
     n_right = y_right.shape[0]
     n = y.shape[0]
@@ -256,9 +272,12 @@ def best_split_feature_value(X: NDArray, y: NDArray) -> tuple[float, int, float]
     The method checks every possible combination of feature and
     existing unique feature values in the dataset.
     """
+    # Set initial values
     feature_index = None
     feature_value = None
     impurity_reduction = -(float('inf'))
+
+    # Search for the feature and value pair which provides the least gini impurity
     for j in range(X.shape[1]):
         for value in np.unique(X[:, j]):
             left_mask = (X[:,j] <= value)
@@ -307,12 +326,16 @@ class Perceptron:
         prediction: int
             Integer value corresponding to one of the three species of penguin. 
         """
+        # Initialize the weighted sum i as 0, and define the number of features in x
         m = x.shape[0]
         i = 0
+
+        # Add the weighted value for each feature in x
         for index in range(m):
             i += x[index] * self.weights[index]
         i = i + self.bias
         
+        # Activate if the weighted sum exceeds 0
         if i < 0: 
             prediction = 0
         else: 
@@ -334,12 +357,16 @@ class Perceptron:
         y_pred: NDArray
             NumPy array with shape (n_samples, ) with predicted species 
         """
+        # Initialize function variables
         n = X.shape[0]
         predictions = []
+
+        # Make predictions for each row in X
         for row in range(n):
             y = self.predict_single(X[row])
             predictions.append(y)
         
+        # Create an array from list y
         y_pred = np.array(predictions)
 
         return y_pred
@@ -366,11 +393,14 @@ class Perceptron:
         accuracy: float 
             Float in range (0, 1) representing how accurately the perceptron has been trained in the dataset 
         """
+        # Initialize function variables
         epoch = 0
         self.converged = False
         n = X.shape[0]
         m = X.shape[1]
         old_accuracy = 0
+
+        # Predict the values, and adjust the weights for each row in each episode, as well as the bias
         while (epoch < max_epochs) and not self.converged:
             y_pred = self.predict(X)
             for index in range(n):
@@ -400,6 +430,7 @@ class Perceptron:
             The vertical value where the boundary meets 0 on the horizontal axis 
 
         """
+        # Calculate the slope and intercept, based on weights 1 and 2, and bias
         slope =  -(self.weights[weight_indexes[0]]/self.weights[weight_indexes[1]])
         intercept = -(self.bias/self.weights[weight_indexes[1]])
 
@@ -537,6 +568,7 @@ class DecisionTree:
                 "stitch" predictions for left and right datasets into single y vector
                 return y vector (length matching number of rows in X)
         """
+        # Returns the y-value if the node is a leaf node, else continues the recursion
         if node is None:
             raise ValueError('Node is None')
         elif isinstance(node, DecisionTreeLeafNode):
@@ -560,9 +592,6 @@ class DecisionTree:
 ############
 
 if __name__ == "__main__":
-    # Demonstrate your code / solutions here.
-    # Be tidy; don't cut-and-paste lots of lines.
-    # Experiments can be implemented as separate functions that are called here.
     def visualize_decision_boundary(X: NDArray, y: NDArray, perceptron: Perceptron):
         """
         Plot each element used in a perceptron 
@@ -578,7 +607,8 @@ if __name__ == "__main__":
             The color corresponds to the species 
 
         """
-        colors = ['blue', 'orange', 'pink', 'yellow']
+        # Plot datapoints in dataset
+        colors = ['blue', 'orange']
         plt.figure(figsize=(5,3.5))
         for label_value in np.unique(y):
             plt.scatter(x=X[y==label_value,0],
@@ -589,8 +619,8 @@ if __name__ == "__main__":
         plt.ylabel('Feature 1')
         plt.legend()
         
+        # Plot linear graph dividing the classes
         slope, intercept = perceptron.decision_boundary_slope_intercept(weight_indexes=(0,1))
-        
         x_min = min(X[:, 0])
         x_max = max(X[:, 0])
         x_range = np.linspace(x_min, x_max,100)
@@ -602,6 +632,7 @@ if __name__ == "__main__":
         return 
 
     def perceptron_1():
+        # Read data set and divide into trainingset and testset for gentoo-penguins based on bill depth and flipper length
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, 1:3]
@@ -609,20 +640,24 @@ if __name__ == "__main__":
         X_test = data_set_test[0][:, 1:3]
         y_test = convert_y_to_binary(data_set_test[1], 2)
 
+        # Create perceptron model, check accuracy before training, then train it
         perceptron = Perceptron([rnd.random(), rnd.random()], rnd.random())
         y_pred = perceptron.predict(X_test)
         first_model_accuracy = accuracy(y_pred, y_test)
         perceptron.train(X_train, y_train, 0.01, 100)
 
+        # Predict classes based on perceptron model
         y_pred = perceptron.predict(X_test)
         model_accuracy = accuracy(y_pred, y_test)
 
+        # Visualize as datapoints and linear graph
         visualize_decision_boundary(X_train, y_train, perceptron)
 
         return first_model_accuracy, model_accuracy
 
 
     def perceptron_2():
+        # Read data set and divide into trainingset and testset for chinstrap penguins based on bill length and bill depth
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, :2]
@@ -630,21 +665,24 @@ if __name__ == "__main__":
         X_test = data_set_test[0][:, :2]
         y_test = convert_y_to_binary(data_set_test[1], 1)
 
+        # Create perceptron model, check accuracy before training, then train it
         perceptron = Perceptron([rnd.random(), rnd.random()], rnd.random())
         y_pred = perceptron.predict(X_test)
         first_model_accuracy = accuracy(y_pred, y_test)
         perceptron.train(X_train, y_train, 0.01, 100)
 
+        # Predict classes based on perceptron model
         y_pred = perceptron.predict(X_test)
         model_accuracy = accuracy(y_pred, y_test)
 
+        # Visualize as datapoints and linear graph
         visualize_decision_boundary(X_train, y_train, perceptron)
-
 
         return first_model_accuracy, model_accuracy
 
     
     def decision_tree_1():
+        # Read data set and divide into trainingset and testset for gentoo penguins based on bill depth and flipper length
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, 1:3]
@@ -652,9 +690,11 @@ if __name__ == "__main__":
         X_test = data_set_test[0][:, 1:3]
         y_test = convert_y_to_binary(data_set_test[1], 2)
 
+        # Create a decision tree based on training set 
         tree = DecisionTree()
         tree.fit(X_train, y_train)
 
+        # Make predictions based on questions in tree
         y_pred = tree.predict(X_test)
         new_accuracy = accuracy(y_pred, y_test)
         print(new_accuracy)
@@ -662,6 +702,7 @@ if __name__ == "__main__":
         return tree
     
     def decision_tree_1_2():
+        # Read data set and divide into trainingset and testset classifying all classes based on bill depth and flipper length
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, 1:3]
@@ -669,9 +710,11 @@ if __name__ == "__main__":
         X_test = data_set_test[0][:, 1:3]
         y_test = data_set_test[1]
 
+        # Create a decision tree based on training set 
         tree = DecisionTree()
         tree.fit(X_train, y_train)
 
+        # Make predictions based on questions in tree
         y_pred = tree.predict(X_test)
         new_accuracy = accuracy(y_pred, y_test)
         print(new_accuracy)
@@ -679,6 +722,7 @@ if __name__ == "__main__":
         return tree
     
     def decision_tree_2():
+        # Read data set and divide into trainingset and testset for chinstrap penguins based on bill length and bill depth
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, :2]
@@ -686,9 +730,11 @@ if __name__ == "__main__":
         X_test = data_set_test[0][:, :2]
         y_test = convert_y_to_binary(data_set_test[1], 1)
 
+        # Create a decision tree based on training set 
         tree = DecisionTree()
         tree.fit(X_train, y_train)
 
+        # Make predictions based on questions in tree
         y_pred = tree.predict(X_test)
         new_accuracy = accuracy(y_pred, y_test)
         print(new_accuracy)
@@ -696,6 +742,7 @@ if __name__ == "__main__":
         return tree
     
     def decision_tree_2_2():
+        # Read data set and divide into trainingset and testset classifying all classes based on bill length and bill depth
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0][:, :2]
@@ -703,9 +750,11 @@ if __name__ == "__main__":
         X_test = data_set_test[0][:, :2]
         y_test = data_set_test[1]
 
+        # Create a decision tree based on training set 
         tree = DecisionTree()
         tree.fit(X_train, y_train)
 
+        # Make predictions based on questions in tree
         y_pred = tree.predict(X_test)
         new_accuracy = accuracy(y_pred, y_test)
         print(new_accuracy)
@@ -713,6 +762,7 @@ if __name__ == "__main__":
         return tree
 
     def decision_tree_3():
+        # Read data set and divide into trainingset and testset classifying all classes based on all features
         X, y = read_data('palmer_penguins.csv', ["species", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"])
         data_set_train, data_set_test = train_test_split(X, y, 0.7)
         X_train = data_set_train[0]
@@ -720,12 +770,13 @@ if __name__ == "__main__":
         X_test = data_set_test[0]
         y_test = data_set_test[1]
 
+        # Create a decision tree based on training set 
         tree = DecisionTree()
         tree.fit(X_train, y_train)
 
+        # Make predictions based on questions in tree
         y_pred = tree.predict(X_test)
         new_accuracy = accuracy(y_pred, y_test)
         print(new_accuracy)
         
         return tree
-print(decision_tree_2_2())
